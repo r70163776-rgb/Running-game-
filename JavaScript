@@ -1,0 +1,107 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// کھلاڑی کی خصوصیات
+const player = {
+    x: canvas.width / 2 - 25,
+    y: canvas.height - 100,
+    width: 50,
+    height: 50,
+    color: 'orange',
+    speed: 5,
+    lane: 1 // 0: بائیں, 1: درمیان, 2: دائیں
+};
+
+// رکاوٹوں کی خصوصیات
+let obstacles = [];
+const obstacleWidth = 50;
+const obstacleHeight = 50;
+const obstacleColor = 'red';
+let obstacleSpeed = 3;
+let score = 0;
+
+// کھلاڑی کو ڈرا کریں
+function drawPlayer() {
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+// رکاوٹوں کو ڈرا کریں
+function drawObstacles() {
+    for (let i = 0; i < obstacles.length; i++) {
+        ctx.fillStyle = obstacleColor;
+        ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacleWidth, obstacleHeight);
+    }
+}
+
+// رکاوٹیں بنائیں
+function createObstacle() {
+    const lane = Math.floor(Math.random() * 3); // 0, 1, یا 2
+    const x = (canvas.width / 3) * lane + (canvas.width / 6) - (obstacleWidth / 2);
+    obstacles.push({ x: x, y: -obstacleHeight });
+}
+
+// رکاوٹوں کو حرکت دیں
+function moveObstacles() {
+    for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].y += obstacleSpeed;
+    }
+}
+
+// ٹکراؤ کا پتہ لگائیں
+function checkCollision() {
+    for (let i = 0; i < obstacles.length; i++) {
+        if (
+            player.x < obstacles[i].x + obstacleWidth &&
+            player.x + player.width > obstacles[i].x &&
+            player.y < obstacles[i].y + obstacleHeight &&
+            player.y + player.height > obstacles[i].y
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// اسکور ڈرا کریں
+function drawScore() {
+    ctx.fillStyle = 'black';
+    ctx.font = '24px Arial';
+    ctx.fillText('اسکور: ' + score, 10, 30);
+}
+
+// گیم لوپ
+function gameLoop() {
+    // کینوس صاف کریں
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawPlayer();
+    drawObstacles();
+    moveObstacles();
+    drawScore();
+
+    // ہر 100 فریم میں ایک نئی رکاوٹ بنائیں
+    if (score % 100 === 0) {
+        createObstacle();
+    }
+
+    if (checkCollision()) {
+        alert('گیم ختم! آپ کا اسکور: ' + score);
+        document.location.reload();
+    }
+
+    score++;
+    requestAnimationFrame(gameLoop);
+}
+
+// کھلاڑی کی حرکت کو کنٹرول کریں
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' && player.lane > 0) {
+        player.lane--;
+    } else if (e.key === 'ArrowRight' && player.lane < 2) {
+        player.lane++;
+    }
+    player.x = (canvas.width / 3) * player.lane + (canvas.width / 6) - (player.width / 2);
+});
+
+gameLoop();
